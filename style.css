@@ -43,6 +43,102 @@ body {
   display: block;
 }
 
+#storyScreen {
+  position: relative;
+  background: #000;
+  overflow: hidden;
+  cursor: none;
+}
+
+#storyScreen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #000000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.8s ease;
+}
+
+.story-scene-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.8s ease;
+  opacity: 1;
+}
+
+#storyScreen.is-transitioning .story-scene-img {
+  opacity: 0.92;
+}
+
+#storyScreen.is-transitioning::after {
+  opacity: 0.62;
+}
+
+#storyScreen.is-ending::after {
+  opacity: 1;
+  transition-duration: 3s;
+}
+
+#storyScreen.is-ending .story-scene-img {
+  opacity: 0;
+  transition-duration: 3s;
+}
+
+.story-continue-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 2;
+  color: #ffffff;
+  font-family: "WorkearFont", Arial, sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.8px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.92;
+}
+
+.story-next-arrow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 35;
+  color: #ffffff;
+  font-size: 56px;
+  font-family: "Blue Winter", "Arial", sans-serif;
+  line-height: 1;
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+  user-select: none;
+  animation: storyArrowPulse 1.15s ease-in-out infinite;
+  opacity: 0;
+  transform: translate(12px, -12px);
+}
+
+#storyScreen.show-cursor-arrow .story-next-arrow {
+  opacity: 1;
+}
+
+#storyScreen.is-transitioning .story-next-arrow {
+  opacity: 0.4;
+}
+
+@keyframes storyArrowPulse {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* Simple Utility Screens */
 .simple-screen {
   background: linear-gradient(180deg, #ffd6a5 0%, #ffb5a7 50%, #ffa5c7 100%);

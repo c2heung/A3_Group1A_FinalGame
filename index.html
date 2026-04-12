@@ -7,6 +7,28 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <!-- Story Intro Screen -->
+    <div
+      id="storyScreen"
+      class="screen"
+      role="button"
+      tabindex="0"
+      aria-label="Story screen, click to continue"
+    >
+      <img
+        id="storySceneImage"
+        class="story-scene-img"
+        src="Assets/StoryScene1.png"
+        alt="Story scene 1"
+      />
+      <p id="storyContinueHint" class="story-continue-hint">
+        click to continue
+      </p>
+      <div id="storyNextArrow" class="story-next-arrow" aria-hidden="true">
+        &gt;
+      </div>
+    </div>
+
     <!-- Start Screen -->
     <div id="startScreen" class="screen active simple-screen">
       <div class="simple-content">

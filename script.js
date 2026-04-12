@@ -21,6 +21,24 @@ let isGamePausedBySettings = false;
 let isSfxEnabled = true;
 let isMusicEnabled = true;
 let hasGameStarted = false;
+let hasShownIntroStory = false;
+let storySceneIndex = 0;
+let storyTransitionStepTimeoutId = null;
+let storyTransitionCleanupTimeoutId = null;
+let storyEndFadeTimeoutId = null;
+let isStoryTransitioning = false;
+
+const STORY_TRANSITION_DURATION_MS = 800;
+const STORY_END_FADE_DURATION_MS = 3000;
+const STORY_SCENE_PATHS = [
+  "Assets/StoryScene1.png",
+  "Assets/StoryScene2.png",
+  "Assets/StoryScene3.png",
+  "Assets/StoryScene4.png",
+  "Assets/StoryScene5.png",
+  "Assets/StoryScene6.png",
+  "Assets/StoryScene7.png",
+];
 
 const dayCustomerCounts = {
   1: 4,
@@ -54,6 +72,10 @@ const posState = {
 // ============================================================================
 const screens = document.querySelectorAll(".screen");
 
+const storyScreen = document.getElementById("storyScreen");
+const storySceneImage = document.getElementById("storySceneImage");
+const storyNextArrow = document.getElementById("storyNextArrow");
+const storyMusic = new Audio("Assets/Audio/Space.mp3");
 const startScreen = document.getElementById("startScreen");
 const dayIntroScreen = document.getElementById("dayIntroScreen");
 const ticketScreen = document.getElementById("ticketScreen");
@@ -113,6 +135,12 @@ if (bgMusic) {
   bgMusic.volume = 0.4;
 }
 
+if (storyMusic) {
+  storyMusic.loop = false;
+  storyMusic.volume = 0.5;
+  storyMusic.playbackRate = 0.81;
+}
+
 const feedbackText = document.getElementById("feedbackText");
 const nextBtn = document.getElementById("nextBtn");
 
@@ -166,6 +194,123 @@ function formatTime(minutes) {
 
 function updateTimeDisplay(minutes) {
   timeText.textContent = formatTime(minutes);
+}
+
+function clearStoryIntroTimers() {
+  if (storyTransitionStepTimeoutId) {
+    clearTimeout(storyTransitionStepTimeoutId);
+    storyTransitionStepTimeoutId = null;
+  }
+
+  if (storyTransitionCleanupTimeoutId) {
+    clearTimeout(storyTransitionCleanupTimeoutId);
+    storyTransitionCleanupTimeoutId = null;
+  }
+
+  if (storyEndFadeTimeoutId) {
+    clearTimeout(storyEndFadeTimeoutId);
+    storyEndFadeTimeoutId = null;
+  }
+}
+
+function playStoryMusic() {
+  if (!storyMusic || !isMusicEnabled) return;
+
+  storyMusic.loop = false;
+  storyMusic.volume = 0.5;
+  storyMusic.playbackRate = 0.81;
+  storyMusic.currentTime = 0;
+  storyMusic.play().catch(() => {});
+}
+
+function stopStoryMusic() {
+  if (!storyMusic) return;
+
+  storyMusic.pause();
+  storyMusic.currentTime = 0;
+}
+
+function setStoryScene(index) {
+  if (!storySceneImage) return;
+
+  const safeIndex = clamp(index, 0, STORY_SCENE_PATHS.length - 1);
+  storySceneImage.src = STORY_SCENE_PATHS[safeIndex];
+  storySceneImage.alt = `Story scene ${safeIndex + 1}`;
+}
+
+function hideStoryCursorArrow() {
+  if (!storyScreen || !storyNextArrow) return;
+  storyScreen.classList.remove("show-cursor-arrow");
+}
+
+function updateStoryCursorArrowPosition(event) {
+  if (!storyScreen || !storyNextArrow) return;
+
+  storyNextArrow.style.left = `${event.clientX}px`;
+  storyNextArrow.style.top = `${event.clientY}px`;
+  storyScreen.classList.add("show-cursor-arrow");
+}
+
+function startIntroStorySequence() {
+  if (!storyScreen || !storySceneImage || STORY_SCENE_PATHS.length === 0) {
+    stopStoryMusic();
+    showScreen(startScreen);
+    return;
+  }
+
+  hasShownIntroStory = true;
+  clearStoryIntroTimers();
+
+  storySceneIndex = 0;
+  isStoryTransitioning = false;
+  setStoryScene(storySceneIndex);
+  storyScreen.classList.remove("is-transitioning");
+  storyScreen.classList.remove("is-ending");
+  hideStoryCursorArrow();
+  playStoryMusic();
+  showScreen(storyScreen);
+  storyScreen.focus();
+}
+
+function advanceIntroStoryScene() {
+  if (!storyScreen || !storyScreen.classList.contains("active")) return;
+  if (isStoryTransitioning) return;
+
+  const isLastScene = storySceneIndex >= STORY_SCENE_PATHS.length - 1;
+  if (isLastScene) {
+    clearStoryIntroTimers();
+    isStoryTransitioning = true;
+    storyScreen.classList.remove("is-transitioning");
+    storyScreen.classList.add("is-ending");
+    hideStoryCursorArrow();
+
+    storyEndFadeTimeoutId = setTimeout(() => {
+      storyScreen.classList.remove("is-ending");
+      isStoryTransitioning = false;
+      stopStoryMusic();
+      showScreen(startScreen);
+      storyEndFadeTimeoutId = null;
+    }, STORY_END_FADE_DURATION_MS);
+    return;
+  }
+
+  isStoryTransitioning = true;
+  storyScreen.classList.add("is-transitioning");
+
+  storyTransitionStepTimeoutId = setTimeout(
+    () => {
+      storySceneIndex += 1;
+      setStoryScene(storySceneIndex);
+      storyTransitionStepTimeoutId = null;
+    },
+    Math.floor(STORY_TRANSITION_DURATION_MS / 2),
+  );
+
+  storyTransitionCleanupTimeoutId = setTimeout(() => {
+    storyScreen.classList.remove("is-transitioning");
+    isStoryTransitioning = false;
+    storyTransitionCleanupTimeoutId = null;
+  }, STORY_TRANSITION_DURATION_MS);
 }
 
 function playPosClickSound() {
@@ -1227,6 +1372,30 @@ closeSettingsBtn.addEventListener("keydown", (event) => {
   closeSettingsAndResume();
 });
 
+if (storyScreen) {
+  storyScreen.addEventListener("click", () => {
+    advanceIntroStoryScene();
+  });
+
+  storyScreen.addEventListener("mousemove", (event) => {
+    updateStoryCursorArrowPosition(event);
+  });
+
+  storyScreen.addEventListener("mouseenter", (event) => {
+    updateStoryCursorArrowPosition(event);
+  });
+
+  storyScreen.addEventListener("mouseleave", () => {
+    hideStoryCursorArrow();
+  });
+
+  storyScreen.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    advanceIntroStoryScene();
+  });
+}
+
 toggleSfx.addEventListener("change", () => {
   isSfxEnabled = toggleSfx.checked;
   applyAudioSettings();
@@ -1280,4 +1449,8 @@ applyAudioSettings();
 // ============================================================================
 // INITIAL SCREEN
 // ============================================================================
-showScreen(startScreen);
+if (hasShownIntroStory) {
+  showScreen(startScreen);
+} else {
+  startIntroStorySequence();
+}
