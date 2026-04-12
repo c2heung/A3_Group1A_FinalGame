@@ -7,6 +7,11 @@ Planet Amtcha
 ## Group Number
 
 Group 1A
+Mackenzie Leu, 21071891, mleu
+Lisa Ho, 21067660, mt2ho
+Cheryl Heung, 21070019, c2heung
+Jade Sun, 21028242, j45sun
+Queene Calading, 21094601, qcaladin
 
 ## Description
 
