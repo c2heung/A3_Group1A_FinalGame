@@ -75,6 +75,7 @@ const screens = document.querySelectorAll(".screen");
 const storyScreen = document.getElementById("storyScreen");
 const storySceneImage = document.getElementById("storySceneImage");
 const storyNextArrow = document.getElementById("storyNextArrow");
+const skipStoryBtn = document.getElementById("skipStoryBtn");
 const storyMusic = new Audio("Assets/Audio/Space.mp3");
 const startScreen = document.getElementById("startScreen");
 const dayIntroScreen = document.getElementById("dayIntroScreen");
@@ -211,6 +212,20 @@ function clearStoryIntroTimers() {
     clearTimeout(storyEndFadeTimeoutId);
     storyEndFadeTimeoutId = null;
   }
+}
+
+function skipIntroStory() {
+  clearStoryIntroTimers();
+  isStoryTransitioning = false;
+  stopStoryMusic();
+  if (storyScreen) {
+    storyScreen.classList.remove(
+      "is-transitioning",
+      "is-ending",
+      "show-cursor-arrow",
+    );
+  }
+  showScreen(startScreen);
 }
 
 function playStoryMusic() {
@@ -1393,6 +1408,13 @@ if (storyScreen) {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     advanceIntroStoryScene();
+  });
+}
+
+if (skipStoryBtn) {
+  skipStoryBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    skipIntroStory();
   });
 }
 
