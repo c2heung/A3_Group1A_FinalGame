@@ -1,0 +1,14 @@
+    <!-- Instructions Modal -->
+    <div id="instructionsModal" class="modal hidden">
+      <div class="modal-content">
+        <h2>How to Play</h2>
+        <p><strong>Welcome to Planet Amtcha! 🌿☕</strong></p>
+        <p>You're working your first shift at an alien café! Understand each customer's jumbled order and keep them happy.</p>
+        <p>- Watch the order bubble and listen carefully.</p>
+        <p>- Press "Huh?" for a clearer hint if it's too confusing.</p>
+        <p>- Tap "Okay!" to open the POS to enter the order. Choose the right Temperature, Base, Flavor, and Topping.</p>
+        <p>- Serve up the drink before time runs out!</p>
+        <p>- Earn over 50% satisfaction to complete your shift and move on to the next day!</p>
+        <button id="closeInstructionsBtn" class="order-btn">Got it</button>
+      </div>
+    </div>
