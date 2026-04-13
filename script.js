@@ -27,7 +27,9 @@ let storyTransitionStepTimeoutId = null;
 let storyTransitionCleanupTimeoutId = null;
 let storyEndFadeTimeoutId = null;
 let storyIntroFadeTimeoutId = null;
+let storyIntroHoldTimeoutId = null;
 let isStoryTransitioning = false;
+let awaitingEndOfDayTicket = false;
 
 const STORY_TRANSITION_DURATION_MS = 800;
 const STORY_END_FADE_DURATION_MS = 3000;
@@ -75,6 +77,7 @@ const screens = document.querySelectorAll(".screen");
 
 const storyScreen = document.getElementById("storyScreen");
 const storySceneImage = document.getElementById("storySceneImage");
+const storyIntroText = document.getElementById("storyIntroText");
 const storyNextArrow = document.getElementById("storyNextArrow");
 const skipStoryBtn = document.getElementById("skipStoryBtn");
 const storyMusic = new Audio("Assets/Audio/Space.mp3");
@@ -223,6 +226,11 @@ function clearStoryIntroTimers() {
     clearTimeout(storyIntroFadeTimeoutId);
     storyIntroFadeTimeoutId = null;
   }
+
+  if (storyIntroHoldTimeoutId) {
+    clearTimeout(storyIntroHoldTimeoutId);
+    storyIntroHoldTimeoutId = null;
+  }
 }
 
 function skipIntroStory() {
@@ -231,6 +239,7 @@ function skipIntroStory() {
   stopStoryMusic();
   if (storyScreen) {
     storyScreen.classList.remove(
+      "is-opening",
       "is-intro-fade",
       "is-transitioning",
       "is-ending",
@@ -292,18 +301,29 @@ function startIntroStorySequence() {
   storySceneIndex = 0;
   isStoryTransitioning = false;
   setStoryScene(storySceneIndex);
-  storyScreen.classList.add("is-intro-fade");
-  storyScreen.classList.remove("is-transitioning", "is-ending");
+  storyScreen.classList.add("is-opening");
+  storyScreen.classList.remove(
+    "is-intro-fade",
+    "is-transitioning",
+    "is-ending",
+  );
   hideStoryCursorArrow();
   showScreen(storyScreen);
   storyScreen.focus();
 
   isStoryTransitioning = true;
-  storyIntroFadeTimeoutId = setTimeout(() => {
+  storyIntroHoldTimeoutId = setTimeout(() => {
     playStoryMusic();
-    storyScreen.classList.remove("is-intro-fade");
-    isStoryTransitioning = false;
-    storyIntroFadeTimeoutId = null;
+    storyScreen.classList.remove("is-opening");
+    storyScreen.classList.add("is-intro-fade");
+
+    storyIntroFadeTimeoutId = setTimeout(() => {
+      storyScreen.classList.remove("is-intro-fade");
+      isStoryTransitioning = false;
+      storyIntroFadeTimeoutId = null;
+    }, 2000);
+
+    storyIntroHoldTimeoutId = null;
   }, 2000);
 }
 
@@ -432,6 +452,7 @@ function resetTransientGameState() {
   posTimerState = null;
   pausedPosRemainingSeconds = null;
   isGamePausedBySettings = false;
+  awaitingEndOfDayTicket = false;
 }
 
 function getPosTimerConfigForDay(day) {
@@ -1241,11 +1262,15 @@ submitBtn.addEventListener("click", () => {
       showFailureScreen();
       return;
     } else if (levelSession.status === "completed") {
-      showVictoryScreen();
+      awaitingEndOfDayTicket = true;
+      nextBtn.textContent = "Close Shop";
+      showFeedback(gradeResult);
       return;
     }
   }
 
+  awaitingEndOfDayTicket = false;
+  nextBtn.textContent = "Next Order";
   showFeedback(gradeResult);
 });
 
@@ -1365,6 +1390,13 @@ function showFailureScreen() {
 }
 
 nextBtn.addEventListener("click", () => {
+  if (awaitingEndOfDayTicket) {
+    awaitingEndOfDayTicket = false;
+    nextBtn.textContent = "Next Order";
+    showVictoryScreen();
+    return;
+  }
+
   currentCustomerIndex += 1;
   beginCurrentCustomer();
 });
@@ -1409,7 +1441,6 @@ closeSettingsBtn.addEventListener("keydown", (event) => {
 
 if (storyScreen) {
   storyScreen.addEventListener("click", () => {
-    playStoryMusic();
     advanceIntroStoryScene();
   });
 
@@ -1428,7 +1459,6 @@ if (storyScreen) {
   storyScreen.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
-    playStoryMusic();
     advanceIntroStoryScene();
   });
 }

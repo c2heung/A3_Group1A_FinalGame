@@ -87,7 +87,37 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: opacity 0.8s ease;
+  transition: opacity 2s ease;
+  opacity: 1;
+}
+
+.story-intro-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  color: #ffffff;
+  font-family: "WorkearFont", Arial, sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.6px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+
+#storyScreen.is-opening::after {
+  opacity: 1;
+}
+
+#storyScreen.is-opening .story-scene-img {
+  opacity: 0;
+}
+
+#storyScreen.is-opening .story-intro-text {
   opacity: 1;
 }
 
@@ -96,13 +126,15 @@ body {
 }
 
 #storyScreen.is-intro-fade::after {
-  opacity: 1;
-  transition-duration: 2s;
+  opacity: 0;
 }
 
 #storyScreen.is-intro-fade .story-scene-img {
+  opacity: 1;
+}
+
+#storyScreen.is-intro-fade .story-intro-text {
   opacity: 0;
-  transition-duration: 2s;
 }
 
 #storyScreen.is-transitioning::after {
@@ -681,10 +713,28 @@ body {
   border: none;
   border-radius: 20px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: opacity 0.8s ease;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   background: white;
   color: #333;
+}
+
+.story-intro-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  color: #ffffff;
+  font-family: "WorkearFont", Arial, sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.6px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 2s ease;
 }
 
 #huhBtn {
