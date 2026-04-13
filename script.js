@@ -26,6 +26,7 @@ let storySceneIndex = 0;
 let storyTransitionStepTimeoutId = null;
 let storyTransitionCleanupTimeoutId = null;
 let storyEndFadeTimeoutId = null;
+let storyIntroFadeTimeoutId = null;
 let isStoryTransitioning = false;
 
 const STORY_TRANSITION_DURATION_MS = 800;
@@ -137,6 +138,7 @@ if (bgMusic) {
 }
 
 if (storyMusic) {
+  storyMusic.preload = "auto";
   storyMusic.loop = false;
   storyMusic.volume = 0.5;
   storyMusic.playbackRate = 0.81;
@@ -151,6 +153,10 @@ const nextBtn = document.getElementById("nextBtn");
 function showScreen(screenEl) {
   screens.forEach((screen) => screen.classList.remove("active"));
   screenEl.classList.add("active");
+
+  if (settingsBtn) {
+    settingsBtn.classList.toggle("hidden", screenEl === storyScreen);
+  }
 
   const showTime = screenEl === orderScreen || screenEl === feedbackScreen;
   const showPosTimer = screenEl === orderScreen || screenEl === posScreen;
@@ -212,6 +218,11 @@ function clearStoryIntroTimers() {
     clearTimeout(storyEndFadeTimeoutId);
     storyEndFadeTimeoutId = null;
   }
+
+  if (storyIntroFadeTimeoutId) {
+    clearTimeout(storyIntroFadeTimeoutId);
+    storyIntroFadeTimeoutId = null;
+  }
 }
 
 function skipIntroStory() {
@@ -220,6 +231,7 @@ function skipIntroStory() {
   stopStoryMusic();
   if (storyScreen) {
     storyScreen.classList.remove(
+      "is-intro-fade",
       "is-transitioning",
       "is-ending",
       "show-cursor-arrow",
@@ -230,6 +242,7 @@ function skipIntroStory() {
 
 function playStoryMusic() {
   if (!storyMusic || !isMusicEnabled) return;
+  if (!storyMusic.paused) return;
 
   storyMusic.loop = false;
   storyMusic.volume = 0.5;
@@ -279,12 +292,19 @@ function startIntroStorySequence() {
   storySceneIndex = 0;
   isStoryTransitioning = false;
   setStoryScene(storySceneIndex);
-  storyScreen.classList.remove("is-transitioning");
-  storyScreen.classList.remove("is-ending");
+  storyScreen.classList.add("is-intro-fade");
+  storyScreen.classList.remove("is-transitioning", "is-ending");
   hideStoryCursorArrow();
-  playStoryMusic();
   showScreen(storyScreen);
   storyScreen.focus();
+
+  isStoryTransitioning = true;
+  storyIntroFadeTimeoutId = setTimeout(() => {
+    playStoryMusic();
+    storyScreen.classList.remove("is-intro-fade");
+    isStoryTransitioning = false;
+    storyIntroFadeTimeoutId = null;
+  }, 2000);
 }
 
 function advanceIntroStoryScene() {
@@ -1389,6 +1409,7 @@ closeSettingsBtn.addEventListener("keydown", (event) => {
 
 if (storyScreen) {
   storyScreen.addEventListener("click", () => {
+    playStoryMusic();
     advanceIntroStoryScene();
   });
 
@@ -1407,6 +1428,7 @@ if (storyScreen) {
   storyScreen.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
+    playStoryMusic();
     advanceIntroStoryScene();
   });
 }
@@ -1471,8 +1493,16 @@ applyAudioSettings();
 // ============================================================================
 // INITIAL SCREEN
 // ============================================================================
-if (hasShownIntroStory) {
-  showScreen(startScreen);
+const startStoryOnLoad = () => {
+  if (hasShownIntroStory) {
+    showScreen(startScreen);
+  } else {
+    startIntroStorySequence();
+  }
+};
+
+if (document.readyState === "complete") {
+  startStoryOnLoad();
 } else {
-  startIntroStorySequence();
+  window.addEventListener("load", startStoryOnLoad, { once: true });
 }

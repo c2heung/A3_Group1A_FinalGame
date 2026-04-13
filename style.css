@@ -95,6 +95,16 @@ body {
   opacity: 0.92;
 }
 
+#storyScreen.is-intro-fade::after {
+  opacity: 1;
+  transition-duration: 2s;
+}
+
+#storyScreen.is-intro-fade .story-scene-img {
+  opacity: 0;
+  transition-duration: 2s;
+}
+
 #storyScreen.is-transitioning::after {
   opacity: 0.62;
 }
